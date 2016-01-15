@@ -1,13 +1,14 @@
 package com.example.mpl_hackathon.helloword;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -15,17 +16,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        initTopButton();
     }
 
     @Override
@@ -48,5 +39,46 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void initTopButton() {
+        final ImageView btnTop = (ImageView) findViewById(R.id.btn_top);
+        if (btnTop != null) {
+            btnTop.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN:
+                            btnTop.setImageDrawable(ContextCompat
+                                    .getDrawable(MainActivity.this, R.drawable.alert_btn_pressed));
+                            btnTop.getLayoutParams().height = 160;
+                            btnTop.getLayoutParams().width = 160;
+                            changeLedColor(true);
+                            return true;
+                        case MotionEvent.ACTION_UP:
+                            btnTop.setImageDrawable(ContextCompat
+                                    .getDrawable(MainActivity.this, R.drawable.alert_btn_unpressed));
+                            btnTop.getLayoutParams().height = 180;
+                            btnTop.getLayoutParams().width = 180;
+                            changeLedColor(false);
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
+            });
+        }
+    }
+
+    private void changeLedColor(boolean green) {
+        ImageView btnBottom = (ImageView) findViewById(R.id.btn_bottom);
+        if (btnBottom != null) {
+            if (green) {
+                btnBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.green_led));
+            } else {
+                btnBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.red_led));
+            }
+        }
+
     }
 }
