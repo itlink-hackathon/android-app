@@ -33,9 +33,9 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> mArrayAdapter;
     private BluetoothDevice mValertDevice;
 
-    private LocationManager mLocationManager;
+    private BluetoothController mBluetoothController;
 
-    private NetworkManager mNetworkManager;
+    private LocationManager mLocationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,25 +46,29 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
-        Log.d(TAG, "1");
         initTopButton();
 
+        // bluetooth
+        mBluetoothController = new BluetoothController();
         mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        IntentFilter filter = new IntentFilter(BluetoothLeService.ACTION_GATT_CONNECTED);
+        filter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        filter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        filter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         registerReceiver(mBluetoothReceiver, filter);
-
-        Log.d(TAG, "2");
-
         startScanBluetoothDevices();
 
+        // position
         mLocationManager = new LocationManager(this);
 
+        // connection avec serveur
         sendTestRequest();
     }
 
     @Override
     protected void onDestroy() {
         unregisterReceiver(mBluetoothReceiver);
+        stopService(new Intent(MainActivity.this, BluetoothLeService.class));
         super.onDestroy();
     }
 
@@ -176,33 +180,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void startScanBluetoothDevices() {
         Log.d(TAG, "Démarrage du scan");
-        BluetoothController controller = new BluetoothController();
-        controller.initialize(this);
-        controller.scan();
+        if (mBluetoothController != null) {
+            mBluetoothController.initialize(this);
+            mBluetoothController.scanLeDevice(true, mLeScanCallback);
+        }
     }
 
     private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-
-                //Finding devices
-                if (BluetoothDevice.ACTION_FOUND.equals(action))
-                {
-                    // Get the BluetoothDevice object from the Intent
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    // Add the name and address to an array adapter to show in a ListView
-                    Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
-                    if(device.getName().equals(VAlertBleName))
-                    {
-                        mValertDevice = device;
-                        Log.d(TAG, "VAlert Detected! ");
-                    }
-
-                    mArrayAdapter.add(device.getName() + " " + device.getAddress());
-                    mArrayAdapter.notifyDataSetChanged();
-                }
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(intent.getAction())) {
+                Log.d(TAG, "data received from device : " + intent.getAction());
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(intent.getAction())) {
+                Log.d(TAG, "data received from device : " + intent.getAction());
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(intent.getAction())) {
+                Log.d(TAG, "data received from device : " + intent.getAction());
             }
-        };
+        }
+    };
+
+    private BluetoothAdapter.LeScanCallback mLeScanCallback =
+            new BluetoothAdapter.LeScanCallback() {
+                @Override
+                public void onLeScan(final BluetoothDevice device, int rssi,
+                                     byte[] scanRecord) {
+                    if (VAlertBleName.equals(device.getName())) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.i("onLeScan", device.toString());
+                                connectToDevice(device);
+                            }
+                        });
+                    }
+                }
+            };
+
+
+    private void connectToDevice(BluetoothDevice device) {
+        mValertDevice = device;
+        Intent startIntent = new Intent(MainActivity.this, BluetoothLeService.class);
+        startIntent.putExtra(BluetoothLeService.DEVICE_EXTRA, mValertDevice);
+        startService(startIntent);
+        mBluetoothController.scanLeDevice(false, mLeScanCallback);
+    }
 
     private void sendTestRequest() {
         // création de la requête
