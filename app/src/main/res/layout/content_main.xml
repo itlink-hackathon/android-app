@@ -42,7 +42,7 @@
                 android:layout_width="180dp"
                 android:layout_height="180dp"
                 android:layout_centerInParent="true"
-                android:src="@drawable/red_led" />
+                android:src="@drawable/green_led" />
 
             <!--<TextView-->
             <!--android:id="@+id/text_bottom"-->

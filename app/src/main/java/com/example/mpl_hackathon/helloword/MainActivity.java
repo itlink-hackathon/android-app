@@ -9,13 +9,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
     private LocationManager mLocationManager;
 
+    private boolean mAlertDetected = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         filter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         filter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+
         registerReceiver(mBluetoothReceiver, filter);
         startScanBluetoothDevices();
 
@@ -144,32 +147,30 @@ public class MainActivity extends AppCompatActivity {
     private void initTopButton() {
         final ImageView btnTop = (ImageView) findViewById(R.id.btn_top);
         if (btnTop != null) {
-            btnTop.setOnTouchListener(new View.OnTouchListener() {
+            btnTop.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN:
-                            changeLedColor(true);
-                            return true;
-                        case MotionEvent.ACTION_UP:
-                            changeLedColor(false);
-                            return true;
-                        default:
-                            return false;
-                    }
+                public void onClick(View v) {
+                    onAlertDetected();
                 }
             });
         }
     }
 
-    private void changeLedColor(boolean green) {
-        ImageView btnBottom = (ImageView) findViewById(R.id.btn_bottom);
-        if (btnBottom != null) {
-            if (green) {
-                btnBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.green_led));
-            } else {
-                btnBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.red_led));
-            }
+    private void changeLedColor() {
+        final ImageView btnBottom = (ImageView) findViewById(R.id.btn_bottom);
+        if (btnBottom != null && !mAlertDetected) {
+            mAlertDetected = true;
+            Handler handler = new Handler();
+
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    btnBottom.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.green_led));
+                    mAlertDetected = false;
+                }
+            }, 2000);
+
+            btnBottom.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.red_led));
         }
     }
 
@@ -193,19 +194,19 @@ public class MainActivity extends AppCompatActivity {
                 mArrayAdapter.add(device.getName() + " " + device.getAddress());
                 Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
                 mArrayAdapter.notifyDataSetChanged();
-
-                if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(intent.getAction())) {
-                    Log.d(TAG, "data received from device : " + intent.getAction());
-                } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(intent.getAction())) {
-                    Log.d(TAG, "data received from device : " + intent.getAction());
-                } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(intent.getAction())) {
-                    Log.d(TAG, "data received from device : " + intent.getAction());
-                }
+            } else if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+                Log.d(TAG, "data received from device : " + action);
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                Log.d(TAG, "data received from device : " + action);
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                Log.d(TAG, "data received from device : " + action);
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                Log.d(TAG, "data received from device : " + action);
+                onAlertDetected();
             }
         }
     };
 
-    // TODO appeler la fonction au clic
     private void sendAlertData() {
         try {
             final JSONObject jsonObject = getCurrentInformation();
@@ -280,5 +281,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return jsonBody;
+    }
+
+    private void onAlertDetected() {
+        changeLedColor();
+        sendAlertData();
+        ;
     }
 }

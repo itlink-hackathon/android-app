@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
@@ -15,7 +14,6 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -113,24 +111,16 @@ public class BluetoothLeService extends Service {
                     }
                 }
 
+                // New services discovered
                 @Override
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                    Log.i(TAG, "test");
                     BluetoothGattCharacteristic characteristic = gatt.getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC);
                     gatt.setCharacteristicNotification(characteristic, true);
                     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID_ENABLE_NOTIFICATION);
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    //return
-//                    try {
-//                        wait(1000);
-//                    } catch (Exception e) {
-//                    }
                     gatt.writeDescriptor(descriptor);
                     gatt.writeCharacteristic(characteristic);
-                    Log.i(TAG, "Ecrite du descripteur"); //descriptor write operation successfully started?
                 }
-
-                // New services discovered
 
                 @Override
                 // Result of a characteristic read operation
@@ -139,13 +129,13 @@ public class BluetoothLeService extends Service {
                                                  int status) {
                     Log.i(TAG, "onCharacteristicRead" + characteristic.toString());
                     if (status == BluetoothGatt.GATT_SUCCESS) {
-//                        broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
                     }
                 }
 
                 @Override
                 public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                     Log.i(TAG, "onCharacteristicChanged" + characteristic.getValue());
+                    broadcastUpdate(ACTION_DATA_AVAILABLE);
                 }
             };
 
