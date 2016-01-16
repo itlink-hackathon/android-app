@@ -177,23 +177,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Démarrage du scan");
         BluetoothController controller = new BluetoothController();
         controller.initialize(this);
-        controller.scan(mCallback);
-    }
-
-    private BluetoothAdapter.LeScanCallback mCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if (device != null) {
-                displayBluetoothDevices(device);
-            } else {
-                Log.d(TAG, "no device");
-            }
-        }
-    };
-
-
-    private void displayBluetoothDevices(BluetoothDevice device) {
-        Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
+        controller.scan();
     }
 
     private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
