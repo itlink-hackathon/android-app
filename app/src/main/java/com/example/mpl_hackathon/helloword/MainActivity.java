@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String VAlertBleName = "V.ALRT A2:FE:C1";
 
     private ArrayAdapter<String> mArrayAdapter;
+    private BluetoothDevice mValertDevice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,8 +150,14 @@ public class MainActivity extends AppCompatActivity {
                     // Get the BluetoothDevice object from the Intent
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     // Add the name and address to an array adapter to show in a ListView
-                    mArrayAdapter.add(device.getName() + " " + device.getAddress());
                     Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
+                    if(device.getName().equals(VAlertBleName))
+                    {
+                        mValertDevice = device;
+                        Log.d(TAG, "VAlert Detected! ");
+                    }
+
+                    mArrayAdapter.add(device.getName() + " " + device.getAddress());
                     mArrayAdapter.notifyDataSetChanged();
                 }
             }
