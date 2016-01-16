@@ -1,5 +1,6 @@
 package com.example.mpl_hackathon.helloword;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -17,6 +18,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,6 +32,10 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayAdapter<String> mArrayAdapter;
     private BluetoothDevice mValertDevice;
+
+    private LocationManager mLocationManager;
+
+    private NetworkManager mNetworkManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,12 +56,58 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "2");
 
         startScanBluetoothDevices();
+
+        mLocationManager = new LocationManager(this);
+
+        sendTestRequest();
     }
 
     @Override
     protected void onDestroy() {
         unregisterReceiver(mBluetoothReceiver);
         super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mLocationManager.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mLocationManager.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mLocationManager.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mLocationManager.onStop();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            // Check for the integer request code originally supplied to startResolutionForResult().
+            case LocationManager.REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Log.i(TAG, "User agreed to make required location settings changes.");
+                        mLocationManager.tryStartingLocationUpdates();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Log.i(TAG, "User chose not to make required location settings changes.");
+                        break;
+                }
+                break;
+        }
     }
 
     @Override
@@ -121,23 +178,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Démarrage du scan");
         BluetoothController controller = new BluetoothController();
         controller.initialize(this);
-        controller.scan(mCallback);
-    }
-
-    private BluetoothAdapter.LeScanCallback mCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if (device != null) {
-                displayBluetoothDevices(device);
-            } else {
-                Log.d(TAG, "no device");
-            }
-        }
-    };
-
-
-    private void displayBluetoothDevices(BluetoothDevice device) {
-        Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
+        controller.scan();
     }
 
     private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
@@ -162,6 +203,30 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+
+    private void sendTestRequest() {
+        // création de la requête
+        StringRequest testRequestPost = new StringRequest(Request.Method.GET,
+                "http://" + NetworkManager.HOSTNAME + "",
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Toast.makeText(MainActivity.this, "Response received : " + response, Toast
+                                .LENGTH_LONG).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, "Response Error", Toast.LENGTH_LONG)
+                                .show();
+                        error.printStackTrace();
+                    }
+                });
+
+        // envoi de requête
+        NetworkManager.getInstance(getApplicationContext()).addToRequestQueue(testRequestPost);
+    }
 
 
 }

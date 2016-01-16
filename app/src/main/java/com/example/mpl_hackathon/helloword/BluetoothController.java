@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 
 /**
  * Created by mpl-hackathon on 15/01/2016.
@@ -14,11 +13,7 @@ public class BluetoothController {
 
     public static final int REQUEST_ENABLE_BT = 100;
 
-    // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
-
     private BluetoothAdapter mBluetoothAdapter;
-    boolean mScanning;
 
     public void initialize(Activity activity) {
         // Initializes Bluetooth adapter.
@@ -34,28 +29,8 @@ public class BluetoothController {
         }
     }
 
-    public void scan(final BluetoothAdapter.LeScanCallback callback) {
-//        if (mBluetoothAdapter != null) {
-//            Handler handler = new Handler();
-//        if (enable) {
-//            // Stops scanning after a pre-defined scan period.
-//            handler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mScanning = false;
-//                    mBluetoothAdapter.stopLeScan(callback);
-//                }
-//            }, SCAN_PERIOD);
-//
-//            mScanning = true;
-//            mBluetoothAdapter.startLeScan(callback);
-//        } else {
-//            mScanning = false;
-//            mBluetoothAdapter.stopLeScan(callback);
-//        }
-//        }
-
-        if(mBluetoothAdapter != null) {
+    public void scan() {
+        if (mBluetoothAdapter != null) {
             mBluetoothAdapter.startDiscovery();
         }
     }
