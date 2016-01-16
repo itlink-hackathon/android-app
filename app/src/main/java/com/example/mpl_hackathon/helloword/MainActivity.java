@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -23,7 +24,12 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,8 +49,9 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate");
         setContentView(R.layout.content_main);
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(myToolbar);
+        setTitle(getString(R.string.app_name));
 
         initTopButton();
 
@@ -60,9 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
         // position
         mLocationManager = new LocationManager(this);
-
-        // connection avec serveur
-        sendTestRequest();
     }
 
     @Override
@@ -145,17 +149,9 @@ public class MainActivity extends AppCompatActivity {
                 public boolean onTouch(View v, MotionEvent event) {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
-                            btnTop.setImageDrawable(ContextCompat
-                                    .getDrawable(MainActivity.this, R.drawable.alert_btn_pressed));
-                            btnTop.getLayoutParams().height = 160;
-                            btnTop.getLayoutParams().width = 160;
                             changeLedColor(true);
                             return true;
                         case MotionEvent.ACTION_UP:
-                            btnTop.setImageDrawable(ContextCompat
-                                    .getDrawable(MainActivity.this, R.drawable.alert_btn_unpressed));
-                            btnTop.getLayoutParams().height = 180;
-                            btnTop.getLayoutParams().width = 180;
                             changeLedColor(false);
                             return true;
                         default:
@@ -175,7 +171,6 @@ public class MainActivity extends AppCompatActivity {
                 btnBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.red_led));
             }
         }
-
     }
 
     private void startScanBluetoothDevices() {
@@ -189,15 +184,62 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(intent.getAction())) {
-                Log.d(TAG, "data received from device : " + intent.getAction());
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(intent.getAction())) {
-                Log.d(TAG, "data received from device : " + intent.getAction());
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(intent.getAction())) {
-                Log.d(TAG, "data received from device : " + intent.getAction());
+
+            //Finding devices
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Get the BluetoothDevice object from the Intent
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                // Add the name and address to an array adapter to show in a ListView
+                mArrayAdapter.add(device.getName() + " " + device.getAddress());
+                Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
+                mArrayAdapter.notifyDataSetChanged();
+
+                if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(intent.getAction())) {
+                    Log.d(TAG, "data received from device : " + intent.getAction());
+                } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(intent.getAction())) {
+                    Log.d(TAG, "data received from device : " + intent.getAction());
+                } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(intent.getAction())) {
+                    Log.d(TAG, "data received from device : " + intent.getAction());
+                }
             }
         }
     };
+
+    // TODO appeler la fonction au clic
+    private void sendAlertData() {
+        try {
+            final JSONObject jsonObject = getCurrentInformation();
+
+            if (jsonObject != null) {
+                // création de la requête
+                JsonObjectRequest testRequestPost =
+                        new JsonObjectRequest(Request.Method.POST,
+                                "http://" + NetworkManager.HOSTNAME + "app-urgence/web/app.php/api/new-alerte",
+                                jsonObject,
+                                new Response.Listener<JSONObject>() {
+                                    @Override
+                                    public void onResponse(JSONObject response) {
+                                        Toast.makeText(MainActivity.this, "Response received : " + response, Toast
+                                                .LENGTH_LONG).show();
+                                        // TODO data_received + success : true ou false
+                                    }
+                                },
+                                new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        Toast.makeText(MainActivity.this, "Response Error", Toast.LENGTH_LONG)
+                                                .show();
+                                        error.printStackTrace();
+                                    }
+                                });
+
+                // envoi de requête
+                NetworkManager.getInstance(getApplicationContext()).addToRequestQueue(testRequestPost);
+            }
+        } catch (JSONException e) {
+
+        }
+    }
 
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
             new BluetoothAdapter.LeScanCallback() {
@@ -225,29 +267,18 @@ public class MainActivity extends AppCompatActivity {
         mBluetoothController.scanLeDevice(false, mLeScanCallback);
     }
 
-    private void sendTestRequest() {
-        // création de la requête
-        StringRequest testRequestPost = new StringRequest(Request.Method.GET,
-                "http://" + NetworkManager.HOSTNAME + "",
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Toast.makeText(MainActivity.this, "Response received : success !", Toast
-                                .LENGTH_LONG).show();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(MainActivity.this, "Response received : Error !", Toast.LENGTH_LONG)
-                                .show();
-                        error.printStackTrace();
-                    }
-                });
+    private JSONObject getCurrentInformation() throws JSONException {
+        JSONObject jsonBody = null;
+        Location location = mLocationManager.getCurrentLocation();
 
-        // envoi de requête
-        NetworkManager.getInstance(getApplicationContext()).addToRequestQueue(testRequestPost);
+        if (location != null) {
+            jsonBody = new JSONObject();
+            jsonBody.put("timestamp_current", new Date().getTime());
+            jsonBody.put("latitude", location.getLatitude());
+            jsonBody.put("latitude", location.getLongitude());
+            jsonBody.put("timestamp_position", location.getTime());
+        }
+
+        return jsonBody;
     }
-
-
 }
