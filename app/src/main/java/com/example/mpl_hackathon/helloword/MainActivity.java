@@ -18,6 +18,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> mArrayAdapter;
 
     private LocationManager mLocationManager;
+
+    private NetworkManager mNetworkManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
         startScanBluetoothDevices();
 
         mLocationManager = new LocationManager(this);
+
+        sendTestRequest();
     }
 
     @Override
@@ -202,6 +212,30 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+
+    private void sendTestRequest() {
+        // création de la requête
+        StringRequest testRequestPost = new StringRequest(Request.Method.GET,
+                "http://" + NetworkManager.HOSTNAME + "",
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Toast.makeText(MainActivity.this, "Response received : " + response, Toast
+                                .LENGTH_LONG).show();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, "Response Error", Toast.LENGTH_LONG)
+                                .show();
+                        error.printStackTrace();
+                    }
+                });
+
+        // envoi de requête
+        NetworkManager.getInstance(getApplicationContext()).addToRequestQueue(testRequestPost);
+    }
 
 
 }
