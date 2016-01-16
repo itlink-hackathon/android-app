@@ -34,7 +34,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String VAlertBleName = "V.ALRT A2:FE:C1";
+    private static final String V_ALERT_BLE_NAME = "V.ALRT A2:FE:C1";
 
     private ArrayAdapter<String> mArrayAdapter;
     private BluetoothDevice mValertDevice;
@@ -222,7 +222,6 @@ public class MainActivity extends AppCompatActivity {
                                     public void onResponse(JSONObject response) {
                                         Toast.makeText(MainActivity.this, "Response received : " + response, Toast
                                                 .LENGTH_LONG).show();
-                                        // TODO data_received + success : true ou false
                                     }
                                 },
                                 new Response.ErrorListener() {
@@ -247,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onLeScan(final BluetoothDevice device, int rssi,
                                      byte[] scanRecord) {
-                    if (VAlertBleName.equals(device.getName())) {
+                    if (V_ALERT_BLE_NAME.equals(device.getName())) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -276,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
             jsonBody = new JSONObject();
             jsonBody.put("timestamp_current", new Date().getTime());
             jsonBody.put("latitude", location.getLatitude());
-            jsonBody.put("latitude", location.getLongitude());
+            jsonBody.put("longitude", location.getLongitude());
             jsonBody.put("timestamp_position", location.getTime());
         }
 
