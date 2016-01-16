@@ -1,18 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:width="200dp"
-        android:height="200dp">
+    <item>
+        <shape>
+            <size
+                android:width="180dp"
+                android:height="180dp" />
+
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+    <item>
         <shape android:shape="oval">
-            <solid android:color="@android:color/holo_red_dark" />
+            <stroke
+                android:width="10dp"
+                android:color="@android:color/holo_red_light" />
+            <solid android:color="@android:color/transparent" />
         </shape>
     </item>
 
     <item
-        android:drawable="@drawable/ic_error_outline_white_48dp"
-        android:left="@dimen/alert_btn_margin"
-        android:top="@dimen/alert_btn_margin"
-        android:right="@dimen/alert_btn_margin"
-        android:bottom="@dimen/alert_btn_margin" />
+        android:bottom="20dp"
+        android:left="20dp"
+        android:right="20dp"
+        android:top="20dp">
+        <shape android:shape="oval">
+            <solid android:color="@android:color/holo_red_light" />
+        </shape>
+    </item>
+
 </layer-list>
