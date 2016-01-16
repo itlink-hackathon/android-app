@@ -1,6 +1,7 @@
 package com.example.mpl_hackathon.helloword;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,7 +25,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,10 +37,11 @@ public class MainActivity extends AppCompatActivity {
     private static final String VAlertBleName = "V.ALRT A2:FE:C1";
 
     private ArrayAdapter<String> mArrayAdapter;
+    private BluetoothDevice mValertDevice;
+
+    private BluetoothController mBluetoothController;
 
     private LocationManager mLocationManager;
-
-    private NetworkManager mNetworkManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,23 +53,26 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         setTitle(getString(R.string.app_name));
 
-        Log.d(TAG, "1");
         initTopButton();
 
+        // bluetooth
+        mBluetoothController = new BluetoothController();
         mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        IntentFilter filter = new IntentFilter(BluetoothLeService.ACTION_GATT_CONNECTED);
+        filter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        filter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        filter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         registerReceiver(mBluetoothReceiver, filter);
-
-        Log.d(TAG, "2");
-
         startScanBluetoothDevices();
 
+        // position
         mLocationManager = new LocationManager(this);
     }
 
     @Override
     protected void onDestroy() {
         unregisterReceiver(mBluetoothReceiver);
+        stopService(new Intent(MainActivity.this, BluetoothLeService.class));
         super.onDestroy();
     }
 
@@ -167,14 +171,14 @@ public class MainActivity extends AppCompatActivity {
                 btnBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.red_led));
             }
         }
-
     }
 
     private void startScanBluetoothDevices() {
         Log.d(TAG, "Démarrage du scan");
-        BluetoothController controller = new BluetoothController();
-        controller.initialize(this);
-        controller.scan();
+        if (mBluetoothController != null) {
+            mBluetoothController.initialize(this);
+            mBluetoothController.scanLeDevice(true, mLeScanCallback);
+        }
     }
 
     private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
@@ -189,6 +193,14 @@ public class MainActivity extends AppCompatActivity {
                 mArrayAdapter.add(device.getName() + " " + device.getAddress());
                 Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
                 mArrayAdapter.notifyDataSetChanged();
+
+                if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(intent.getAction())) {
+                    Log.d(TAG, "data received from device : " + intent.getAction());
+                } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(intent.getAction())) {
+                    Log.d(TAG, "data received from device : " + intent.getAction());
+                } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(intent.getAction())) {
+                    Log.d(TAG, "data received from device : " + intent.getAction());
+                }
             }
         }
     };
@@ -198,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             final JSONObject jsonObject = getCurrentInformation();
 
-            if(jsonObject != null) {
+            if (jsonObject != null) {
                 // création de la requête
                 JsonObjectRequest testRequestPost =
                         new JsonObjectRequest(Request.Method.POST,
@@ -227,7 +239,32 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
 
         }
+    }
 
+    private BluetoothAdapter.LeScanCallback mLeScanCallback =
+            new BluetoothAdapter.LeScanCallback() {
+                @Override
+                public void onLeScan(final BluetoothDevice device, int rssi,
+                                     byte[] scanRecord) {
+                    if (VAlertBleName.equals(device.getName())) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.i("onLeScan", device.toString());
+                                connectToDevice(device);
+                            }
+                        });
+                    }
+                }
+            };
+
+
+    private void connectToDevice(BluetoothDevice device) {
+        mValertDevice = device;
+        Intent startIntent = new Intent(MainActivity.this, BluetoothLeService.class);
+        startIntent.putExtra(BluetoothLeService.DEVICE_EXTRA, mValertDevice);
+        startService(startIntent);
+        mBluetoothController.scanLeDevice(false, mLeScanCallback);
     }
 
     private JSONObject getCurrentInformation() throws JSONException {
@@ -244,5 +281,4 @@ public class MainActivity extends AppCompatActivity {
 
         return jsonBody;
     }
-
 }

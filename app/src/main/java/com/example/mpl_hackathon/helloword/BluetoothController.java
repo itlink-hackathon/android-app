@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 
 /**
  * Created by mpl-hackathon on 15/01/2016.
@@ -12,6 +13,8 @@ import android.content.Intent;
 public class BluetoothController {
 
     public static final int REQUEST_ENABLE_BT = 100;
+
+    private static final long SCAN_PERIOD = 10000;
 
     private BluetoothAdapter mBluetoothAdapter;
 
@@ -29,9 +32,24 @@ public class BluetoothController {
         }
     }
 
-    public void scan() {
+    public void scanLeDevice(boolean enable, final BluetoothAdapter.LeScanCallback callback) {
         if (mBluetoothAdapter != null) {
-            mBluetoothAdapter.startDiscovery();
+            Handler handler = new Handler();
+            if (enable) {
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBluetoothAdapter.stopLeScan(callback);
+                    }
+                }, SCAN_PERIOD);
+                mBluetoothAdapter.startLeScan(callback);
+            } else {
+                mBluetoothAdapter.stopLeScan(callback);
+            }
         }
+    }
+
+    public BluetoothAdapter getBluetoothAdapter() {
+        return mBluetoothAdapter;
     }
 }
