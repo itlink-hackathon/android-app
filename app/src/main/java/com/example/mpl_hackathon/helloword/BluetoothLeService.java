@@ -31,6 +31,8 @@ public class BluetoothLeService extends Service {
     private BluetoothGatt mBluetoothGatt;
     private int mConnectionState = STATE_DISCONNECTED;
 
+    private boolean mFirstValueReceived = false;
+
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
@@ -76,7 +78,7 @@ public class BluetoothLeService extends Service {
     private void initConnection(Intent intent) {
         if (intent != null) {
             BluetoothDevice device = (BluetoothDevice) intent.getParcelableExtra(DEVICE_EXTRA);
-            mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+            mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
         }
     }
 
@@ -134,8 +136,12 @@ public class BluetoothLeService extends Service {
 
                 @Override
                 public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                    Log.i(TAG, "onCharacteristicChanged" + characteristic.getValue());
-                    broadcastUpdate(ACTION_DATA_AVAILABLE);
+                    if(mFirstValueReceived) {
+                        Log.i(TAG, "onCharacteristicChanged" + characteristic.getValue());
+                        broadcastUpdate(ACTION_DATA_AVAILABLE);
+                    } else {
+                        mFirstValueReceived = true;
+                    }
                 }
             };
 

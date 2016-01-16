@@ -8,12 +8,12 @@
         android:layout_height="match_parent"
         android:layout_marginTop="60dp"
         android:orientation="vertical"
-        android:weightSum="2">
+        android:weightSum="1">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="0.45">
 
             <ImageView
                 android:id="@+id/btn_top"
@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
 
-            android:layout_weight="1">
+            android:layout_weight="0.45">
 
             <ImageView
                 android:id="@+id/btn_bottom"
@@ -54,6 +54,17 @@
             <!--android:textSize="90sp" />-->
 
         </RelativeLayout>
+
+        <TextView
+            android:id="@+id/status_connection"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="0.1"
+            android:text="Connecté"
+            android:textColor="@color/colorPrimary"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textSize="25sp" />
 
 
     </LinearLayout>

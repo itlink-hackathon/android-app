@@ -33,7 +33,7 @@ public class BluetoothController {
     }
 
     public void scanLeDevice(boolean enable, final BluetoothAdapter.LeScanCallback callback) {
-        if (mBluetoothAdapter != null) {
+        if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
             Handler handler = new Handler();
             if (enable) {
                 handler.postDelayed(new Runnable() {

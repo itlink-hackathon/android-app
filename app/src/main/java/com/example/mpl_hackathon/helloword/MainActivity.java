@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
 
         registerReceiver(mBluetoothReceiver, filter);
-        startScanBluetoothDevices();
+        connectToDevice();
 
         // position
         mLocationManager = new LocationManager(this);
@@ -78,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         unregisterReceiver(mBluetoothReceiver);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        stopService(new Intent(MainActivity.this, BluetoothLeService.class));
+        disconnectFromDevice();
         super.onDestroy();
     }
 
@@ -121,6 +122,18 @@ public class MainActivity extends AppCompatActivity {
                         break;
                 }
                 break;
+            case BluetoothController.REQUEST_ENABLE_BT:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Log.i(TAG, "User agree to access the bluetooth");
+                        if (mBluetoothController != null) {
+                            mBluetoothController.scanLeDevice(true, mLeScanCallback);
+                        }
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Log.i(TAG, "User disagree to access the bluetooth");
+                        break;
+                }
         }
     }
 
@@ -139,8 +152,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_scan_bluetooth) {
-            startScanBluetoothDevices();
+        if (id == R.id.action_connect_to_device) {
+            connectToDevice();
+            return true;
+        } else if (id == R.id.action_disconnect_from_device) {
+            disconnectFromDevice();
             return true;
         }
 
@@ -177,12 +193,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startScanBluetoothDevices() {
+    private void connectToDevice() {
         Log.d(TAG, "Démarrage du scan");
         if (mBluetoothController != null) {
             mBluetoothController.initialize(this);
             mBluetoothController.scanLeDevice(true, mLeScanCallback);
         }
+    }
+
+    private void disconnectFromDevice() {
+        stopService(new Intent(MainActivity.this, BluetoothLeService.class));
+        updateConnectionStatus(false);
     }
 
     private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
@@ -199,8 +220,10 @@ public class MainActivity extends AppCompatActivity {
                 mArrayAdapter.notifyDataSetChanged();
             } else if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 Log.d(TAG, "data received from device : " + action);
+                updateConnectionStatus(true);
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 Log.d(TAG, "data received from device : " + action);
+                updateConnectionStatus(false);
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 Log.d(TAG, "data received from device : " + action);
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
@@ -209,6 +232,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    private void updateConnectionStatus(boolean connected) {
+        TextView status = (TextView) findViewById(R.id.status_connection);
+        if (status != null) {
+            if(connected) {
+                status.setText("Connecté");
+            } else {
+                status.setText("Déconnecté");
+            }
+        }
+    }
 
     private void sendAlertData() {
         try {
@@ -288,6 +322,5 @@ public class MainActivity extends AppCompatActivity {
     private void onAlertDetected() {
         changeLedColor();
         sendAlertData();
-        ;
     }
 }
