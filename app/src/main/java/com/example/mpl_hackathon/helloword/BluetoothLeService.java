@@ -115,61 +115,22 @@ public class BluetoothLeService extends Service {
 
                 @Override
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                    Log.i(TAG,"test");
+                    Log.i(TAG, "test");
                     BluetoothGattCharacteristic characteristic = gatt.getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC);
                     gatt.setCharacteristicNotification(characteristic, true);
                     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID_ENABLE_NOTIFICATION);
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                     //return
-                    Log.i(TAG, ""+ (gatt.writeDescriptor(descriptor) ? "vrai" : "faux")); //descriptor write operation successfully started?
+//                    try {
+//                        wait(1000);
+//                    } catch (Exception e) {
+//                    }
+                    gatt.writeDescriptor(descriptor);
+                    gatt.writeCharacteristic(characteristic);
+                    Log.i(TAG, "Ecrite du descripteur"); //descriptor write operation successfully started?
                 }
+
                 // New services discovered
-                public void onServicesDiscovered_old(BluetoothGatt gatt, int status) {
-                    Log.i(TAG, "onServicesDiscovered");
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
-                        List<BluetoothGattService> services = gatt.getServices();
-                        Log.i(TAG, "onServicesDiscovered" + services.toString());
-                        for (BluetoothGattService serv : services) {
-                            Log.i(TAG, "uuid : " + serv.getUuid());
-                            if (UUID_VSN_GATT_SERVICE.equals(serv.getUuid())) {
-                                Log.d(TAG, "VSN GATT service detected !");
-                                List<BluetoothGattCharacteristic> characteristics
-                                        = serv.getCharacteristics();
-                                for (BluetoothGattCharacteristic charac : characteristics) {
-                                    if (UUID_VSN_GATT_SERVICE_CHARACTERISTIC.equals(charac.getUuid())) {
-                                        Log.d(TAG, "VSN GATT characteristic detected !");
-                                        List<BluetoothGattDescriptor> descriptors = charac.getDescriptors();
-                                        gatt.setCharacteristicNotification(charac, true);
-
-                                        for(BluetoothGattDescriptor descriptor : descriptors){
-                                            if(UUID_ENABLE_NOTIFICATION.equals(descriptor.getUuid())) {
-                                                Log.d(TAG, "enable notification found !");
-                                                if(descriptor.getValue() != null) {
-                                                    Log.d(TAG, "enable value : " + descriptor.getValue());
-                                                } else {
-                                                    Log.d(TAG, "enable value : null");
-                                                }
-                                                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-                                                try{
-                                                    wait(1000);
-                                                } catch (Exception e) {
-
-                                                }
-                                                gatt.writeDescriptor(descriptor);
-                                            }
-                                        }
-
-                                    }
-                                }
-                            }
-                        }
-//                        gatt.readCharacteristic(services.get(0).getCharacteristics().get
-//                                (0));
-                    } else {
-                        Log.w(TAG, "onServicesDiscovered received: " + status);
-                    }
-                }
 
                 @Override
                 // Result of a characteristic read operation
