@@ -1,22 +1,55 @@
 package com.example.mpl_hackathon.helloword;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String VAlertBleName = "V.ALRT A2:FE:C1";
+
+    private ArrayAdapter<String> mArrayAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        Log.d(TAG, "onCreate");
+        setContentView(R.layout.content_main);
+
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+
+        Log.d(TAG, "1");
         initTopButton();
+
+        mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mBluetoothReceiver, filter);
+
+        Log.d(TAG, "2");
+
+        startScanBluetoothDevices();
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterReceiver(mBluetoothReceiver);
+        super.onDestroy();
     }
 
     @Override
@@ -34,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_scan_bluetooth) {
+            startScanBluetoothDevices();
             return true;
         }
 
@@ -81,4 +115,46 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    private void startScanBluetoothDevices() {
+        Log.d(TAG, "Démarrage du scan");
+        BluetoothController controller = new BluetoothController();
+        controller.initialize(this);
+        controller.scan(mCallback);
+    }
+
+    private BluetoothAdapter.LeScanCallback mCallback = new BluetoothAdapter.LeScanCallback() {
+        @Override
+        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            if (device != null) {
+                displayBluetoothDevices(device);
+            } else {
+                Log.d(TAG, "no device");
+            }
+        }
+    };
+
+
+    private void displayBluetoothDevices(BluetoothDevice device) {
+        Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
+    }
+
+    private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+
+                //Finding devices
+                if (BluetoothDevice.ACTION_FOUND.equals(action))
+                {
+                    // Get the BluetoothDevice object from the Intent
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    // Add the name and address to an array adapter to show in a ListView
+                    mArrayAdapter.add(device.getName() + " " + device.getAddress());
+                    Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
+                    mArrayAdapter.notifyDataSetChanged();
+                }
+            }
+        };
+
+
 }
