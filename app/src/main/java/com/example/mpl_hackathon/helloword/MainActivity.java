@@ -232,14 +232,14 @@ public class MainActivity extends AppCompatActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Toast.makeText(MainActivity.this, "Response received : " + response, Toast
+                        Toast.makeText(MainActivity.this, "Response received : success !", Toast
                                 .LENGTH_LONG).show();
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(MainActivity.this, "Response Error", Toast.LENGTH_LONG)
+                        Toast.makeText(MainActivity.this, "Response received : Error !", Toast.LENGTH_LONG)
                                 .show();
                         error.printStackTrace();
                     }

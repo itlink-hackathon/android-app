@@ -6,12 +6,17 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by mpl-hackathon on 16/01/2016.
@@ -43,9 +48,14 @@ public class BluetoothLeService extends Service {
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
 
-//    public final static UUID UUID_HEART_RATE_MEASUREMENT =
-//            UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
+    public final static UUID UUID_VSN_GATT_SERVICE =
+            UUID.fromString("FFFFFFF0-00F7-4000-B000-000000000000");
 
+    public final static UUID UUID_VSN_GATT_SERVICE_CHARACTERISTIC =
+            UUID.fromString("FFFFFFF4-00F7-4000-B000-000000000000");
+
+    public final static UUID UUID_ENABLE_NOTIFICATION =
+            UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     @Nullable
     @Override
@@ -104,10 +114,58 @@ public class BluetoothLeService extends Service {
                 }
 
                 @Override
-                // New services discovered
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+                    Log.i(TAG,"test");
+                    BluetoothGattCharacteristic characteristic = gatt.getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC);
+                    gatt.setCharacteristicNotification(characteristic, true);
+                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID_ENABLE_NOTIFICATION);
+                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                    //return
+                    Log.i(TAG, ""+ (gatt.writeDescriptor(descriptor) ? "vrai" : "faux")); //descriptor write operation successfully started?
+                }
+                // New services discovered
+                public void onServicesDiscovered_old(BluetoothGatt gatt, int status) {
+                    Log.i(TAG, "onServicesDiscovered");
                     if (status == BluetoothGatt.GATT_SUCCESS) {
                         broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+                        List<BluetoothGattService> services = gatt.getServices();
+                        Log.i(TAG, "onServicesDiscovered" + services.toString());
+                        for (BluetoothGattService serv : services) {
+                            Log.i(TAG, "uuid : " + serv.getUuid());
+                            if (UUID_VSN_GATT_SERVICE.equals(serv.getUuid())) {
+                                Log.d(TAG, "VSN GATT service detected !");
+                                List<BluetoothGattCharacteristic> characteristics
+                                        = serv.getCharacteristics();
+                                for (BluetoothGattCharacteristic charac : characteristics) {
+                                    if (UUID_VSN_GATT_SERVICE_CHARACTERISTIC.equals(charac.getUuid())) {
+                                        Log.d(TAG, "VSN GATT characteristic detected !");
+                                        List<BluetoothGattDescriptor> descriptors = charac.getDescriptors();
+                                        gatt.setCharacteristicNotification(charac, true);
+
+                                        for(BluetoothGattDescriptor descriptor : descriptors){
+                                            if(UUID_ENABLE_NOTIFICATION.equals(descriptor.getUuid())) {
+                                                Log.d(TAG, "enable notification found !");
+                                                if(descriptor.getValue() != null) {
+                                                    Log.d(TAG, "enable value : " + descriptor.getValue());
+                                                } else {
+                                                    Log.d(TAG, "enable value : null");
+                                                }
+                                                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+                                                try{
+                                                    wait(1000);
+                                                } catch (Exception e) {
+
+                                                }
+                                                gatt.writeDescriptor(descriptor);
+                                            }
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+//                        gatt.readCharacteristic(services.get(0).getCharacteristics().get
+//                                (0));
                     } else {
                         Log.w(TAG, "onServicesDiscovered received: " + status);
                     }
@@ -118,9 +176,15 @@ public class BluetoothLeService extends Service {
                 public void onCharacteristicRead(BluetoothGatt gatt,
                                                  BluetoothGattCharacteristic characteristic,
                                                  int status) {
+                    Log.i(TAG, "onCharacteristicRead" + characteristic.toString());
                     if (status == BluetoothGatt.GATT_SUCCESS) {
 //                        broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
                     }
+                }
+
+                @Override
+                public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                    Log.i(TAG, "onCharacteristicChanged" + characteristic.getValue());
                 }
             };
 
