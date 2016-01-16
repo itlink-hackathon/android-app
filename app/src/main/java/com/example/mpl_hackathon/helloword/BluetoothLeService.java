@@ -49,8 +49,11 @@ public class BluetoothLeService extends Service {
     public final static UUID UUID_VSN_GATT_SERVICE =
             UUID.fromString("FFFFFFF0-00F7-4000-B000-000000000000");
 
-    public final static UUID UUID_VSN_GATT_SERVICE_CHARACTERISTIC =
+    public final static UUID UUID_VSN_GATT_SERVICE_CHARACTERISTIC_NOTIFICATION =
             UUID.fromString("FFFFFFF4-00F7-4000-B000-000000000000");
+
+    public final static UUID UUID_VSN_GATT_SERVICE_CHARACTERISTIC_DETECTION =
+            UUID.fromString("FFFFFFF2-00F7-4000-B000-000000000000");
 
     public final static UUID UUID_ENABLE_NOTIFICATION =
             UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -76,7 +79,7 @@ public class BluetoothLeService extends Service {
     private void initConnection(Intent intent) {
         if (intent != null) {
             BluetoothDevice device = (BluetoothDevice) intent.getParcelableExtra(DEVICE_EXTRA);
-            mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+            mBluetoothGatt = device.connectGatt(this, true, mGattCallback);
         }
     }
 
@@ -114,12 +117,24 @@ public class BluetoothLeService extends Service {
                 // New services discovered
                 @Override
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                    BluetoothGattCharacteristic characteristic = gatt.getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC);
+//                    BluetoothGattCharacteristic characteristic = gatt
+//                            .getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC_DETECTION);
+//                    characteristic.setValue(1, 0x11, 0);
+//                    if(gatt.writeCharacteristic(characteristic))
+//                    {
+//                        Log.i(TAG, "Succes de l'écriture carac");
+//                    }
+//                    else
+//                    {
+//                        Log.i(TAG, "Erreur de l'écriture carac");
+//                    }
+
+                    BluetoothGattCharacteristic characteristic = gatt
+                            .getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC_NOTIFICATION);
                     gatt.setCharacteristicNotification(characteristic, true);
                     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID_ENABLE_NOTIFICATION);
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                     gatt.writeDescriptor(descriptor);
-                    gatt.writeCharacteristic(characteristic);
                 }
 
                 @Override
@@ -129,6 +144,7 @@ public class BluetoothLeService extends Service {
                                                  int status) {
                     Log.i(TAG, "onCharacteristicRead" + characteristic.toString());
                     if (status == BluetoothGatt.GATT_SUCCESS) {
+
                     }
                 }
 
