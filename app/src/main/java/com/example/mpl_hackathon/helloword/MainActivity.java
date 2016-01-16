@@ -1,5 +1,6 @@
 package com.example.mpl_hackathon.helloword;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -25,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayAdapter<String> mArrayAdapter;
 
+    private LocationManager mLocationManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,12 +47,56 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "2");
 
         startScanBluetoothDevices();
+
+        mLocationManager = new LocationManager(this);
     }
 
     @Override
     protected void onDestroy() {
         unregisterReceiver(mBluetoothReceiver);
         super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mLocationManager.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mLocationManager.onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mLocationManager.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mLocationManager.onStop();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            // Check for the integer request code originally supplied to startResolutionForResult().
+            case LocationManager.REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Log.i(TAG, "User agreed to make required location settings changes.");
+                        mLocationManager.tryStartingLocationUpdates();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Log.i(TAG, "User chose not to make required location settings changes.");
+                        break;
+                }
+                break;
+        }
     }
 
     @Override
