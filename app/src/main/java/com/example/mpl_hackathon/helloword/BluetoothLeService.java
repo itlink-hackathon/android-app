@@ -98,6 +98,7 @@ public class BluetoothLeService extends Service {
                                                     int newState) {
                     String intentAction;
                     if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        mFirstValueReceived = false;
                         intentAction = ACTION_GATT_CONNECTED;
                         mConnectionState = STATE_CONNECTED;
                         broadcastUpdate(intentAction);

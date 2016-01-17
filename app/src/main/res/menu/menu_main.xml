@@ -14,4 +14,10 @@
         android:orderInCategory="99"
         android:title="@string/disconnect_from_device"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_personal_info"
+        android:orderInCategory="98"
+        android:title="@string/modify_personal_info"
+        app:showAsAction="never" />
 </menu>
