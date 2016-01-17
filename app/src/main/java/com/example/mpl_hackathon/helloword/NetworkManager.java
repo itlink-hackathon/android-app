@@ -20,22 +20,22 @@ public class NetworkManager {
      * Nom du serveur hôte.
      */
     public static final String HOSTNAME = "vps237273.ovh.net/";
+
     /**
      * Tag pour les logs.
      */
     private static final String TAG = NetworkManager.class.getSimpleName();
-    /**
-     * Mot de passe du keystore.
-     */
-    private static char[] KEYSTORE_PASSWORD = "!ipsis?35BrF".toCharArray();
+
     /**
      * Instance du singleton.
      */
     private static NetworkManager mInstance;
+
     /**
      * Contexte de l'application
      */
     private static Context mCtx;
+
     /**
      * File d'attente pour la gestion des requêtes.
      */

@@ -21,7 +21,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String V_ALERT_BLE_NAME = "V.ALRT A2:FE:C1";
 
-    private ArrayAdapter<String> mArrayAdapter;
     private BluetoothDevice mValertDevice;
 
     private BluetoothController mBluetoothController;
@@ -65,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
 
         // bluetooth
         mBluetoothController = new BluetoothController();
-        mArrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         IntentFilter filter = new IntentFilter(BluetoothLeService.ACTION_GATT_CONNECTED);
         filter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         filter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
@@ -222,14 +219,7 @@ public class MainActivity extends AppCompatActivity {
             String action = intent.getAction();
 
             //Finding devices
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // Add the name and address to an array adapter to show in a ListView
-                mArrayAdapter.add(device.getName() + " " + device.getAddress());
-                Log.d(TAG, "new device detected : " + device.getName() + " " + device.getAddress());
-                mArrayAdapter.notifyDataSetChanged();
-            } else if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 Log.d(TAG, "data received from device : " + action);
                 updateConnectionStatus(BluetoothProfile.STATE_CONNECTED);
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
