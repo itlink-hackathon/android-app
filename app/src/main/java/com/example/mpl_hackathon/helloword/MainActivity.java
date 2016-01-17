@@ -328,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
         if (location != null) {
             jsonBody = new JSONObject();
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-            jsonBody.put("name", settings.getString(PersonalInformationActivity.NAME, "N/A"));
+            jsonBody.put("lastname", settings.getString(PersonalInformationActivity.LASTNAME, "N/A"));
             jsonBody.put("firstname", settings.getString(PersonalInformationActivity.FIRSTNAME, "N/A"));
             jsonBody.put("phone_number", settings.getString(PersonalInformationActivity.PHONE_NUMBER, "N/A"));
             jsonBody.put("timestamp_current", new Date().getTime());

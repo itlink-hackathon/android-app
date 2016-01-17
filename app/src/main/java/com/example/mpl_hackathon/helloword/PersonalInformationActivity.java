@@ -12,7 +12,7 @@ import android.widget.EditText;
  */
 public class PersonalInformationActivity extends AppCompatActivity {
 
-    public static final String NAME = "name";
+    public static final String LASTNAME = "lastname";
     public static final String FIRSTNAME = "firstname";
     public static final String PHONE_NUMBER = "phone_number";
 
@@ -29,7 +29,7 @@ public class PersonalInformationActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        initName();
+        initLastName();
         initFirstName();
         initPhoneNumber();
         super.onResume();
@@ -37,17 +37,17 @@ public class PersonalInformationActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        saveName();
+        saveLastName();
         saveFirstName();
         savePhoneNumber();
         super.onPause();
     }
 
-    private void initName() {
-        EditText name = (EditText) findViewById(R.id.name);
+    private void initLastName() {
+        EditText name = (EditText) findViewById(R.id.lastname);
         if (name != null) {
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-            name.setText(settings.getString(NAME, ""));
+            name.setText(settings.getString(LASTNAME, ""));
         }
     }
 
@@ -67,11 +67,11 @@ public class PersonalInformationActivity extends AppCompatActivity {
         }
     }
 
-    private void saveName() {
-        EditText name = (EditText) findViewById(R.id.name);
+    private void saveLastName() {
+        EditText name = (EditText) findViewById(R.id.lastname);
         if (name != null) {
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-            settings.edit().putString(NAME, name.getText().toString()).commit();
+            settings.edit().putString(LASTNAME, name.getText().toString()).commit();
         }
     }
 
