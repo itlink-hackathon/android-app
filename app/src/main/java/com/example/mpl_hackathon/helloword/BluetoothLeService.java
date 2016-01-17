@@ -119,17 +119,6 @@ public class BluetoothLeService extends Service {
                 // New services discovered
                 @Override
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-//                    BluetoothGattCharacteristic characteristic = gatt
-//                            .getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC_DETECTION);
-//                    characteristic.setValue(1, 0x11, 0);
-//                    if(gatt.writeCharacteristic(characteristic))
-//                    {
-//                        Log.i(TAG, "Succes de l'écriture carac");
-//                    }
-//                    else
-//                    {
-//                        Log.i(TAG, "Erreur de l'écriture carac");
-//                    }
 
                     BluetoothGattCharacteristic characteristic = gatt
                             .getService(UUID_VSN_GATT_SERVICE).getCharacteristic(UUID_VSN_GATT_SERVICE_CHARACTERISTIC_NOTIFICATION);
