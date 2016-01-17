@@ -3,14 +3,17 @@ package com.example.mpl_hackathon.helloword;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.content.ContextCompat;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -158,9 +161,15 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_disconnect_from_device) {
             disconnectFromDevice();
             return true;
+        } else if (id == R.id.action_personal_info) {
+            startPersonalInfoActivity();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startPersonalInfoActivity() {
+        startActivity(new Intent(this, PersonalInformationActivity.class));
     }
 
     private void initTopButton() {
@@ -176,20 +185,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void changeLedColor() {
-        final ImageView btnBottom = (ImageView) findViewById(R.id.btn_bottom);
-        if (btnBottom != null && !mAlertDetected) {
+        final TextView textBottom = (TextView) findViewById(R.id.text_bottom);
+        if (textBottom != null && !mAlertDetected) {
             mAlertDetected = true;
             Handler handler = new Handler();
 
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    btnBottom.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.green_led));
+                    textBottom.setText("OK");
+                    textBottom.setTextColor(Color.parseColor("#99CC00"));
                     mAlertDetected = false;
                 }
             }, 2000);
 
-            btnBottom.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.red_led));
+            textBottom.setText("ALERTE !");
+            textBottom.setTextColor(Color.parseColor("#FF4444"));
         }
     }
 
@@ -203,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void disconnectFromDevice() {
         stopService(new Intent(MainActivity.this, BluetoothLeService.class));
-        updateConnectionStatus(false);
+        updateConnectionStatus(BluetoothProfile.STATE_DISCONNECTED);
     }
 
     private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
@@ -220,10 +231,10 @@ public class MainActivity extends AppCompatActivity {
                 mArrayAdapter.notifyDataSetChanged();
             } else if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 Log.d(TAG, "data received from device : " + action);
-                updateConnectionStatus(true);
+                updateConnectionStatus(BluetoothProfile.STATE_CONNECTED);
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 Log.d(TAG, "data received from device : " + action);
-                updateConnectionStatus(false);
+                updateConnectionStatus(BluetoothProfile.STATE_DISCONNECTED);
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 Log.d(TAG, "data received from device : " + action);
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
@@ -233,13 +244,19 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void updateConnectionStatus(boolean connected) {
-        TextView status = (TextView) findViewById(R.id.status_connection);
-        if (status != null) {
-            if(connected) {
-                status.setText("Connecté");
-            } else {
-                status.setText("Déconnecté");
+    private void updateConnectionStatus(int status) {
+        TextView statusText = (TextView) findViewById(R.id.status_connection);
+        if (statusText != null) {
+            switch (status) {
+                case BluetoothProfile.STATE_CONNECTED:
+                    statusText.setText("Connecté");
+                    break;
+                case BluetoothProfile.STATE_DISCONNECTED:
+                    statusText.setText("Déconnecté");
+                    break;
+                case BluetoothProfile.STATE_CONNECTING:
+                    statusText.setText("Connection en cours...");
+                    break;
             }
         }
     }
@@ -310,10 +327,15 @@ public class MainActivity extends AppCompatActivity {
 
         if (location != null) {
             jsonBody = new JSONObject();
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+            jsonBody.put("name", settings.getString(PersonalInformationActivity.NAME, "N/A"));
+            jsonBody.put("firstname", settings.getString(PersonalInformationActivity.FIRSTNAME, "N/A"));
+            jsonBody.put("phone_number", settings.getString(PersonalInformationActivity.PHONE_NUMBER, "N/A"));
             jsonBody.put("timestamp_current", new Date().getTime());
             jsonBody.put("latitude", location.getLatitude());
             jsonBody.put("longitude", location.getLongitude());
             jsonBody.put("timestamp_position", location.getTime());
+            jsonBody.put("drive_link", "");
         }
 
         return jsonBody;
