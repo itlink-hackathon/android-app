@@ -264,16 +264,18 @@ public class MainActivity extends AppCompatActivity {
                                 new Response.Listener<JSONObject>() {
                                     @Override
                                     public void onResponse(JSONObject response) {
-                                        Toast.makeText(MainActivity.this, "Response received : " + response, Toast
-                                                .LENGTH_LONG).show();
+//                                        Toast.makeText(MainActivity.this, "Response received : " + response, Toast
+//                                                .LENGTH_LONG).show();
+                                        Log.d(TAG, "Response received : " + response);
                                     }
                                 },
                                 new Response.ErrorListener() {
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
-                                        Toast.makeText(MainActivity.this, "Response Error", Toast.LENGTH_LONG)
-                                                .show();
+//                                        Toast.makeText(MainActivity.this, "Response Error", Toast.LENGTH_LONG)
+//                                                .show();
                                         error.printStackTrace();
+                                        Log.d(TAG, "Response Error : " + error.getMessage());
                                     }
                                 });
 
@@ -318,14 +320,16 @@ public class MainActivity extends AppCompatActivity {
         if (location != null) {
             jsonBody = new JSONObject();
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+            jsonBody.put("gender", "N/A");
             jsonBody.put("lastname", settings.getString(PersonalInformationActivity.LASTNAME, "N/A"));
             jsonBody.put("firstname", settings.getString(PersonalInformationActivity.FIRSTNAME, "N/A"));
+            jsonBody.put("age", "N/A");
             jsonBody.put("phone_number", settings.getString(PersonalInformationActivity.PHONE_NUMBER, "N/A"));
             jsonBody.put("timestamp_current", new Date().getTime());
             jsonBody.put("latitude", location.getLatitude());
             jsonBody.put("longitude", location.getLongitude());
             jsonBody.put("timestamp_position", location.getTime());
-            jsonBody.put("drive_link", "");
+            jsonBody.put("drive_link", "N/A");
         }
 
         return jsonBody;
