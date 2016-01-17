@@ -19,7 +19,7 @@ public class NetworkManager {
     /**
      * Nom du serveur hôte.
      */
-    public static final String HOSTNAME = "vps237031.ovh.net/";
+    public static final String HOSTNAME = "vps237273.ovh.net/";
     /**
      * Tag pour les logs.
      */
